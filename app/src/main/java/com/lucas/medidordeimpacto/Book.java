@@ -2,15 +2,16 @@ package com.lucas.medidordeimpacto;
 
 public class Book {
     private int id;
-    private String kilometragem;
-    private String aceleracao;
+    private String position;
+    private float mean_acceleration;
 
     public Book(){}
-    public Book(String km_read, String a_read) {
+    public Book(String pos_read, float input_mean_accel) {
         super();
-        this.kilometragem = km_read;
-        this.aceleracao = a_read;
+        this.position = pos_read;
+        this.mean_acceleration = input_mean_acel;
     }
+
     public int getId()
     {
         return id;
@@ -21,28 +22,28 @@ public class Book {
         this.id = id;
     }
 
-    public String get_modeloCarro()
+    public String get_position()
     {
-        return kilometragem;
+        return position;
     }
 
-    public void set_modeloCarro(String title)
+    public String get_mean_acceleration()
     {
-        this.kilometragem = title;
+        return mean_acceleration;
     }
 
-    public String get_valorCarro()
+    public void set_position(String input_pos)
     {
-        return aceleracao;
+        this.position = input_pos;
     }
 
-    public void set_valorCarro(String author)
+    public void set_mean_acceleration(float input_mean_accel)
     {
-        this.aceleracao = author;
+        this.mean_acceleration = input_mean_accel;
     }
 
     @Override
     public String toString() {
-        return "Book [id=" + id + ", title=" + kilometragem + ", author=" + aceleracao + "]";
+        return "Book [id=" + id + position + ", mean_accel=" + Float.toString(input_mean_accel) + "]";
     }
 }

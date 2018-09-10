@@ -41,7 +41,7 @@ public class SQLite_handler extends SQLiteOpenHelper {
             "CREATE TABLE " + TABLE_BOOKS + " ( " +
                     KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     KEY_1 + " TEXT, " +
-                    KEY_2 + " TEXT )";
+                    KEY_2 + " NUM )";
 
         // cria a tabela
         db.execSQL(CREATE_BOOK_TABLE);//<-Executa o script SQL
@@ -92,8 +92,8 @@ public class SQLite_handler extends SQLiteOpenHelper {
 
         Book book = new Book();
         book.setId(Integer.parseInt(cursor.getString(0)));
-        book.set_modeloCarro(cursor.getString(1));
-        book.set_valorCarro(cursor.getString(2));
+        book.set_position(cursor.getString(1));
+        book.set_mean_acceleration(cursor.getString(2));
         Log.d("getBook("+id+")", book.toString());
         return book;
     }
@@ -109,8 +109,8 @@ public class SQLite_handler extends SQLiteOpenHelper {
             do {
                 book = new Book();
                 book.setId(Integer.parseInt(cursor.getString(0)));
-                book.set_modeloCarro(cursor.getString(1));
-                book.set_valorCarro(cursor.getString(2));
+                book.set_position(cursor.getString(1));
+                book.set_mean_acceleration(cursor.getString(2));
                 books.add(book);
             } while (cursor.moveToNext());
         }
@@ -121,8 +121,8 @@ public class SQLite_handler extends SQLiteOpenHelper {
     public int updateBook(Book book) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(KEY_1, book.get_modeloCarro()); // get title
-        values.put(KEY_2, book.get_valorCarro()); // get author
+        values.put(KEY_1, book.get_position()); // get title
+        values.put(KEY_2, book.get_mean_acceleration()); // get author
         int i = db.update(TABLE_BOOKS, values, KEY_ID+" = ?", new String[] { String.valueOf(book.getId()) });
         db.close();
         return i;

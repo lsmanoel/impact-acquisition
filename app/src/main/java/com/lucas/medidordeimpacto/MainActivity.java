@@ -20,19 +20,46 @@ import android.widget.TextView;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
-    String kilometragem_instantanea = "8.456";
-    String aceleracao_instantanea = "acell_x" + "acell_y" + "acell_z";
-
     //------------------------------------------------------------------------------------------
     //Variáveis do Acelerômetro - SensorMonager
     private SensorManager sensorManager;
     private boolean color = false;
     private TextView view;
     private long lastTime;
-    float last_x;
-    float last_y;
-    float last_z;
+
+    private int size_buffer = 1024;
+
+    //------------------------------------------------------------------------------------------
+    //Acelerometro
+    float instant_x_accel;
+    float instant_y_accel;
+    float instant_z_accel;
+
+    float last_x_accel;
+    float last_y_accel;
+    float last_z_accel;
+
+    float delta_x_accel;
+    float delta_y_accel;
+    float delta_z_accel;
+
+    float acumulador_accel;  
+
+    float media_accel;
+
+    float n_accel;
+
+
+    float samplePeriod_accel = 200//milisegundos
+    float mediaMovel_size_accel = 50; //10 segundos: 200 ms ... 5 amostras a cada 1 segundo
+    
+    long lastTime_accel;
+    //------------------------------------------------------------------------------------------
+    //GPS
+    string latitude_gps;
+    string longitude_gps;
+
+    int samplerModeOff = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +75,11 @@ public class MainActivity extends AppCompatActivity {
         //------------------------------------------------------------------------------------------
         //Inicialização do Acelerômetro
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        lastTime = System.currentTimeMillis();
+
+        lastTime_accel = System.currentTimeMillis();
 
         //------------------------------------------------------------------------------------------
         //Inicialização do GPS
-
 
         this.checkPermissions();
 
@@ -74,15 +101,17 @@ public class MainActivity extends AppCompatActivity {
 
     //----------------------------------------------------------------------------------------------
     //Métodos do GPS
-    @Override
-    public void onLocationChanged(Location location) {
+
+    public void getLocation(Location location)
+    {
         // Getting latitude of the current location
         double latitude = location.getLatitude();
+        latitude_gps = Double.toString(latitude);
 
         // Getting longitude of the current location
+        // Getting latitude of the current location
         double longitude = location.getLongitude();
-
-        String kilometragem_instantanea = "latitude:" + ;
+        longitude_gps = Double.toString(longitude);
     }
 
     @Override
@@ -124,32 +153,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getAccelerometer(SensorEvent event) {
+        //------------------------------------------------------------------------------------------
+        //==========================================================================================
         long actualTime = System.currentTimeMillis();
-        long deltaTime = actualTime - lastTime;
+        long deltaTime = actualTime - lastTime_accel;
 
-        if (deltaTime < 200) {
+        if (deltaTime < samplePeriod_accel) {
             return;
         }
 
+        lastTime_accel = actualTime;
+        //==========================================================================================
+        //------------------------------------------------------------------------------------------
+
         float[] values = event.values;//Joga os valores no array
         // Movement
-        float x = values[0];
-        float y = values[1];
-        float z = values[2];
+        instant_x_accel = values[0];
+        instant_y_accel = values[1];
+        instant_z_accel = values[2];
 
         // Saída diferencial: Sem nível DC
-        float delta_x = x - last_x;
-        float delta_y = y - last_y;
-        float delta_z = z - last_z;
+        delta_x_accel = instant_x_accel - last_x_accel;
+        delta_y_accel = instant_x_accel - last_y_accel;
+        delta_z_accel = instant_x_accel - last_z_accel;
 
-        String aceleracao_instantanea =
-                "x:" + Float.toString(delta_x) +
-                "y:" + Float.toString(delta_y) +
-                "z:" + Float.toString(delta_z);
+        last_x_accel = instant_x_accel;
+        last_y_accel = instant_x_accel;
+        last_z_accel = instant_x_accel;
 
-        last_x = x;
-        last_y = y;
-        last_z = z;
+
+        float accelationSquareRoot = (delta_x_accel * delta_x_accel + delta_y_accel * delta_y_accel + delta_z_accel * delta_z_accel); 
+        accelationSquareRoot = accelationSquareRoot/(SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+
+        acumulador_accel = acumulador_accel +  accelationSquareRoot;
+
+        n_accel = n_accel + 1;
+
+        if(n_accel > mediaMovel_size){
+            media_accel = acumulador_accel/mediaMovel_size_accel;
+
+            getLocation();//Define latitude_gps e latitude_gps
+
+            SQLite_handler db = new SQLite_handler(this);
+            db.addBook(new Book("lat:" + latitude_gps + "lon:" + longitude_gps, media_accel));
+
+            n_accel=0;               
+        }
+        
     }
 
     @Override
@@ -171,14 +221,9 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         sensorManager.unregisterListener(this);
     }
+
     //------------------------------------------------------------------------------------------
     //Métodos do Banco de Dados
-    public void salvarAcelMedia_button_onClick(View arg0){
-        SQLite_handler db = new SQLite_handler(this);
-
-        db.addBook(new Book(kilometragem_instantanea, aceleracao_instantanea));
-    }
-
     public void ExibirBancoDados_button(View view) {
         // Instância do elemento de opção.
         // Cria o intent indicando qual a opção foi usada para salvar os dados.
